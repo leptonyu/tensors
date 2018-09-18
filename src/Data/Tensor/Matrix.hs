@@ -39,9 +39,7 @@ lu :: forall a n . (KnownNat a, Integral n) => SimpleMatrix a n -> (SimpleMatrix
 lu t =
   let a  = toNat (Proxy :: Proxy a)
       (l,u,_,m) = foldl' go (identity, t, [a,a], 1) ([0..a-1] :: [Int])
-      p  = minimum (fmap (abs.(`gcd` m)) l)  `min` minimum (fmap (abs.(`gcd` m)) u)
-      g  = (`div` (p * signum m))
-  in (fmap g l,fmap g u, g m)
+  in (l,u,m)
   where
     go :: (SimpleMatrix a n, SimpleMatrix a n, [Int], n) -> Int -> (SimpleMatrix a n, SimpleMatrix a n,[Int],n)
     go (l,u@(Tensor f),s,m) i =
@@ -62,7 +60,8 @@ det' t =
   let (l,u,m) = lu t
       s = shape t
       r = length s
-  in (go s r l * go s r u) `div` (m ^ (r+1))
+      m' = if m == 0 then 1 else m
+  in (go s r l * go s r u) `div` (m' ^ (r+1))
   where
     go s' r' (Tensor f) = let fs = f s' in product $ fmap (\i -> fs [i,i]) ([0..r' - 1] :: [Int])
 

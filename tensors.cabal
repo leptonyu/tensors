@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e3f073098b5158a03b88e4fc4de1a4df407ac0ba2001b330f35933f570819334
+-- hash: 3eb6b059a7c089ea94c568d248bba9992db43aa1e910f2f68c346dd09ad9648e
 
 name:           tensors
 version:        0.1.0
@@ -33,6 +33,7 @@ library
   ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -fno-warn-orphans -fno-warn-missing-signatures
   build-depends:
       base >=4.7 && <5
+    , reflection
     , singletons
     , vector
   default-language: Haskell2010
@@ -55,6 +56,7 @@ test-suite spec
       QuickCheck
     , base >=4.7 && <5
     , hspec ==2.*
+    , reflection
     , singletons
     , vector
   default-language: Haskell2010

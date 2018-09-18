@@ -53,6 +53,9 @@ type SimpleTensor (r :: Nat) (dim :: Nat) n = N.If ((N.==) dim 0) (Scalar n) (Te
 
 type TensorRank (s :: [Nat]) = N.Length s
 
+instance (SingI s, Eq n) => Eq (Tensor s n) where
+  f == g = all (\i -> f ! i == g ! i ) ([minBound..maxBound] :: [TensorIndex s])
+
 instance SingI s => Functor (Tensor s) where
   fmap f (Tensor t) = Tensor (\s i -> f (t s i))
 

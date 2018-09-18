@@ -18,6 +18,7 @@ dependencies:
   - base >= 4.7 && < 5
   - vector
   - singletons
+  - reflection
 
 library:
   source-dirs: src
@@ -37,3 +38,4 @@ tests:
     dependencies:
       - hspec == 2.*
       - QuickCheck
+      - reflection

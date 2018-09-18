@@ -110,9 +110,12 @@ module Data.Tensor(
   , slice
   , expand
   -- * Matrix Operation
+  , SimpleMatrix
   , det
   , lu
   , det'
+  , dotM
+  , trace
   -- * Helper
   , runTensor
   , i0

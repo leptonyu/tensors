@@ -13,17 +13,25 @@ module Data.Tensor.Type where
 
 import           Data.List                    (foldl')
 import           Data.Proxy
+import           Data.Reflection
 import           Data.Singletons
 import           Data.Singletons.Prelude.List
 import           GHC.TypeLits
 import           Unsafe.Coerce
+
+newtype MagicNats r = MagicNats (forall (n :: [Nat]). SingI n => Proxy n -> r)
+reifyNats :: forall r. [Int] -> (forall (n :: [Nat]). SingI n => Proxy n -> r) -> r
+reifyNats n k = unsafeCoerce (MagicNats k :: MagicNats r) n Proxy
+
+instance SingI a => Reifies (a::[Nat]) [Int] where
+  reflect = natsVal
 
 type Index = [Int]
 
 toNat :: KnownNat s => Proxy s -> Int
 toNat = unsafeCoerce . natVal
 
-natsVal :: forall (s::[Nat]). SingI s => Proxy s -> Index
+natsVal :: forall proxy (s::[Nat]). SingI s => proxy s -> Index
 natsVal _ = case (sing :: Sing s) of
   SNil         -> []
   (SCons x xs) -> unsafeCoerce <$> (fromSing x: fromSing xs)
