@@ -1,0 +1,60 @@
+-- This file has been generated from package.yaml by hpack version 0.28.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: e3f073098b5158a03b88e4fc4de1a4df407ac0ba2001b330f35933f570819334
+
+name:           tensors
+version:        0.1.0
+synopsis:       Tensor in Haskell
+description:    Tensor use type level programming in haskell.
+category:       Library
+homepage:       https://github.com/leptonyu/tensors#readme
+author:         Daniel YU
+maintainer:     Daniel YU <leptonyu@gmail.com>
+copyright:      (c) 2018 Daniel YU
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+extra-source-files:
+    README.md
+
+library
+  exposed-modules:
+      Data.Tensor
+  other-modules:
+      Data.Tensor.Type
+      Data.Tensor.Index
+      Data.Tensor.Tensor
+      Data.Tensor.Matrix
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -fno-warn-orphans -fno-warn-missing-signatures
+  build-depends:
+      base >=4.7 && <5
+    , singletons
+    , vector
+  default-language: Haskell2010
+
+test-suite spec
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Data.Tensor
+      Data.Tensor.Index
+      Data.Tensor.Matrix
+      Data.Tensor.Tensor
+      Data.Tensor.Type
+      Paths_tensors
+  hs-source-dirs:
+      test
+      src
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -fno-warn-orphans -fno-warn-missing-signatures
+  build-depends:
+      QuickCheck
+    , base >=4.7 && <5
+    , hspec ==2.*
+    , singletons
+    , vector
+  default-language: Haskell2010

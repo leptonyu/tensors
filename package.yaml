@@ -1,0 +1,39 @@
+name:                tensors
+version:             0.1.0
+synopsis:            Tensor in Haskell
+description:         Tensor use type level programming in haskell.
+homepage:            https://github.com/leptonyu/tensors#readme
+license:             BSD3
+author:              Daniel YU
+maintainer:          Daniel YU <leptonyu@gmail.com>
+copyright:           (c) 2018 Daniel YU
+category:            Library
+extra-source-files:
+- README.md
+
+ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -fno-warn-orphans -fno-warn-missing-signatures
+
+
+dependencies:
+  - base >= 4.7 && < 5
+  - vector
+  - singletons
+
+library:
+  source-dirs: src
+  exposed-modules:
+    - Data.Tensor
+  other-modules:
+    - Data.Tensor.Type
+    - Data.Tensor.Index
+    - Data.Tensor.Tensor
+    - Data.Tensor.Matrix
+tests:
+  spec:
+    main: Spec.hs
+    source-dirs:
+      - test
+      - src
+    dependencies:
+      - hspec == 2.*
+      - QuickCheck
