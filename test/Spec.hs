@@ -12,11 +12,10 @@ import           Data.Proxy
 import           Data.Reflection
 import           Data.Tensor
 import           Data.Tensor.Type
+import           GHC.Exts         (fromList)
 import           GHC.TypeLits
 import           Test.Hspec
 import           Test.QuickCheck
-import GHC.Exts(fromList)
-import Data.Singletons
 
 main = hspec spec
 
@@ -38,16 +37,16 @@ specTensor = do
                 go :: forall (s :: Nat). KnownNat s => Int -> Proxy s -> Bool
                 go x _ = trace (identity :: Tensor '[s,s] Int) == x
             in reifyNat (toInteger i') (go i')
-    -- it "det" $ property $
-    --   \s0 -> let s = if null s0 then [1..25] else take 25 $ cycle s0
-    --              a = fromList s :: Tensor '[5,5] Int
-    --           in det a == det' a
+    it "det" $ property $
+      \s0 -> let s = (if null s0 then [1..16] else take 16 $ cycle s0) :: [Int]
+                 a = fromList s :: Tensor '[4,4] Int
+              in det a == det' a
     it "identity" $ property $
       \i s0 -> let n = mod i 20 + 1 :: Int
                    m = n * n
                    s = if null s0 then [1..m] else take m $ cycle s0
                    go :: forall (n :: Nat). KnownNat n => [Int] -> Proxy n -> Bool
-                   go v _ = 
+                   go v _ =
                      let a = fromList v :: Tensor '[n,n] Int
                          idt = identity :: Tensor '[n,n] Int
                      in a `dot` idt == idt `dot` a

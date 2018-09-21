@@ -26,6 +26,7 @@ reifyNats n k = unsafeCoerce (MagicNats k :: MagicNats r) n Proxy
 instance SingI a => Reifies (a::[Nat]) [Int] where
   reflect = natsVal
 
+type Shape = [Int]
 type Index = [Int]
 
 toNat :: KnownNat s => Proxy s -> Int
@@ -48,6 +49,11 @@ tiTovi = go 0
     {-# INLINE go #-}
     go i (n:ns) (ind:inds) = go (i * n + ind) ns inds
     go i _ _               = i
+
+mult :: (Eq a, Num a) => a -> a -> a
+mult a b = case a of
+  0 -> 0
+  c -> c * b
 
 -----------------------
 -- Tensor Type Index

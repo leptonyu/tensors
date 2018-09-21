@@ -19,7 +19,7 @@ import           GHC.Exts
 import           GHC.TypeLits
 
 -- | Tensor Index, used to locate each point of tensor
-newtype TensorIndex (shape :: [Nat]) = TensorIndex [Int] deriving (Eq,Show,Ord)
+newtype TensorIndex (shape :: [Nat]) = TensorIndex Index deriving (Eq,Show,Ord)
 
 instance forall s. SingI s => Bounded (TensorIndex s) where
   minBound = toEnum 0

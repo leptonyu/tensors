@@ -77,6 +77,7 @@ module Data.Tensor(
   , Index
   -- * Tensor Dimension
   , TensorRank
+  , Shape
   , shape
   , rank
   -- * Tensor Operation
