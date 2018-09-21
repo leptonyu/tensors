@@ -2,10 +2,10 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3eb6b059a7c089ea94c568d248bba9992db43aa1e910f2f68c346dd09ad9648e
+-- hash: 0715cab14bb8553b08ea2cfbb261e36a8874e1162baf39d248fd032045f5ff34
 
 name:           tensors
-version:        0.1.0
+version:        0.1.1
 synopsis:       Tensor in Haskell
 description:    Tensor use type level programming in haskell.
 category:       Library
