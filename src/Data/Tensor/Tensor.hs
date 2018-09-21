@@ -15,7 +15,7 @@
 
 module Data.Tensor.Tensor where
 
-import           Data.List                    (group, intercalate)
+import           Data.List                    (intercalate)
 import           Data.Proxy
 import           Data.Singletons
 import qualified Data.Singletons.Prelude      as N
@@ -34,7 +34,7 @@ import           GHC.TypeLits
 -- `s` means shape of tensor.
 --
 -- > identity :: Tensor '[3,3] Int
-newtype Tensor (s :: [Nat]) n = Tensor { getValue :: Index -> Index -> n }
+newtype Tensor (s :: [Nat]) n = Tensor { getValue :: Shape -> Index -> n }
 
 -- | <https://en.wikipedia.org/wiki/Scalarr_(mathematics) Scalar> is rank 0 of tensor
 type Scalar n  = Tensor '[] n
@@ -51,6 +51,7 @@ type Matrix a b n = Tensor '[a,b] n
 -- > SimpleTensor r 0 Int == Scalar Int
 type SimpleTensor (r :: Nat) (dim :: Nat) n = N.If ((N.==) dim 0) (Scalar n) (Tensor (N.Replicate r dim) n)
 
+-- | Tensor rank.
 type TensorRank (s :: [Nat]) = N.Length s
 
 instance (SingI s, Eq n) => Eq (Tensor s n) where
@@ -199,7 +200,13 @@ transpose  = transformTensor go
 
 -- | Unit tensor of shape s, if all the indices are equal then return 1, otherwise return 0.
 identity :: forall s n . (SingI s, Num n) => Tensor s n
-identity = generateTensor ((\i -> if i == 1 then 1 else 0) . length . group) Proxy
+identity = generateTensor go Proxy
+  where
+    go []  = 0
+    go [_] = 1
+    go (a:b:cs)
+      | a /= b = 0
+      | otherwise = go (b:cs)
 
 dyad'
   :: ( r ~ (N.++) s t
@@ -236,9 +243,10 @@ dyad
      , SingI s
      , SingI t
      , SingI r
-     , Num n)
+     , Num n
+     , Eq n)
   => Tensor s n -> Tensor t n -> Tensor r n
-dyad = dyad' (*)
+dyad = dyad' mult
 
 
 type DotTensor s1 s2 = (N.++) (N.Init s1) (N.Tail s2)
@@ -261,7 +269,8 @@ dot
      , SingI (DotTensor s s')
      , SingI s
      , SingI s'
-     , Num n)
+     , Num n
+     , Eq n)
   => Tensor s n
   -> Tensor s' n
   -> Tensor (DotTensor s s') n
@@ -271,7 +280,7 @@ dot t1 t2 =
       b  = length s1 - 1
   in generateTensor (\i ->
         let (ti1,ti2) = splitAt b i
-        in sum $ fmap (\(x,y) -> (t1 ! TensorIndex x) * (t2 ! TensorIndex y)) [(ti1++[x],x:ti2)| x <- [0..n-1]]) Proxy
+        in sum $ fmap (\(x,y) -> (t1 ! TensorIndex x) `mult` (t2 ! TensorIndex y)) [(ti1++[x],x:ti2)| x <- [0..n-1]]) Proxy
 
 
 type ContractionCheck s x y = N.And '[(N.<) x y, (N.>=) x 0, (N.<) y (TensorRank s)]
@@ -320,9 +329,7 @@ contraction t@(Tensor f) (px, py) =
       in sum $ fmap fs [r1 ++ (j:r3) ++ (j:r4) | j <- [0..n-1]]
 
 type CheckDim dim s = N.And '[(N.>=) dim 0, (N.<) dim (N.Length s)]
-
 type CheckSelect dim i s = N.And '[ CheckDim dim s , (N.>=) i 0, (N.<) i ((N.!!) s dim) ]
-
 type Select i s = (N.++) (N.Take i s) (N.Tail (N.Drop i s))
 
 -- | Select `i` indexing of tensor
@@ -407,5 +414,5 @@ expand = transformTensor go
     go (i',_) = zipWith mod i'
 
 -- | Convert tensor to untyped function, for internal usage.
-runTensor :: SingI s => Tensor s n -> [Int] -> n
+runTensor :: SingI s => Tensor s n -> Index -> n
 runTensor t@(Tensor f) = f (shape t)
