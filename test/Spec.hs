@@ -10,18 +10,27 @@ module Main where
 
 import           Data.Proxy
 import           Data.Reflection
+import           Data.Singletons
 import           Data.Tensor
 import           Data.Tensor.Type
 import           GHC.Exts         (fromList)
 import           GHC.TypeLits
 import           Test.Hspec
 import           Test.QuickCheck
+import           Unsafe.Coerce
 
 main = hspec spec
 
 spec :: Spec
 spec = do
   describe "Data.Tensor" specTensor
+
+newtype MagicNats r = MagicNats (forall (n :: [Nat]). SingI n => Proxy n -> r)
+reifyNats :: forall r. [Int] -> (forall (n :: [Nat]). SingI n => Proxy n -> r) -> r
+reifyNats n k = unsafeCoerce (MagicNats k :: MagicNats r) n Proxy
+
+instance SingI a => Reifies (a::[Nat]) [Int] where
+  reflect = natsVal
 
 normalize :: [Int] -> [Int]
 normalize = take 5 . fmap (`mod` 10)
@@ -37,6 +46,8 @@ specTensor = do
                 go :: forall (s :: Nat). KnownNat s => Int -> Proxy s -> Bool
                 go x _ = trace (identity :: Tensor '[s,s] Int) == x
             in reifyNat (toInteger i') (go i')
+    it "index range" $ do
+      fmap fromEnum ([minBound..maxBound] :: [TensorIndex '[2,2,2,2,2]]) `shouldBe` [0..31]
     it "det" $ property $
       \s0 -> let s = (if null s0 then [1..16] else take 16 $ cycle s0) :: [Int]
                  a = fromList s :: Tensor '[4,4] Int

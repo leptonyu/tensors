@@ -11,14 +11,26 @@ category:            Library
 extra-source-files:
 - README.md
 
-ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -fno-warn-orphans -fno-warn-missing-signatures
+ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -fno-warn-orphans -fno-warn-missing-signatures
 
+default-extensions:
+  - RankNTypes
+  - PolyKinds
+  - ScopedTypeVariables
+  - DataKinds
+  - KindSignatures
+  - TypeFamilies
+  - TypeOperators
+  - MultiParamTypeClasses
+  - FlexibleContexts
+  - FlexibleInstances
+  - TypeSynonymInstances
+  - AllowAmbiguousTypes
 
 dependencies:
   - base >= 4.7 && < 5
   - vector
   - singletons
-  - reflection
 
 library:
   source-dirs: src
@@ -29,6 +41,8 @@ library:
     - Data.Tensor.Index
     - Data.Tensor.Tensor
     - Data.Tensor.Matrix
+    - Data.Tensor.Space
+    - Data.Tensor.Statistics
 tests:
   spec:
     main: Spec.hs

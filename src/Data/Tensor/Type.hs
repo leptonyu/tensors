@@ -1,30 +1,11 @@
-{-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE KindSignatures        #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE PolyKinds             #-}
-{-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE TypeFamilies          #-}
-{-# LANGUAGE TypeOperators         #-}
-
 module Data.Tensor.Type where
 
 import           Data.List                    (foldl')
 import           Data.Proxy
-import           Data.Reflection
 import           Data.Singletons
 import           Data.Singletons.Prelude.List
 import           GHC.TypeLits
 import           Unsafe.Coerce
-
-newtype MagicNats r = MagicNats (forall (n :: [Nat]). SingI n => Proxy n -> r)
-reifyNats :: forall r. [Int] -> (forall (n :: [Nat]). SingI n => Proxy n -> r) -> r
-reifyNats n k = unsafeCoerce (MagicNats k :: MagicNats r) n Proxy
-
-instance SingI a => Reifies (a::[Nat]) [Int] where
-  reflect = natsVal
 
 type Shape = [Int]
 type Index = [Int]

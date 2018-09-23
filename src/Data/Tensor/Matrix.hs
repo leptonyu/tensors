@@ -1,11 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-}
-{-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE PolyKinds           #-}
-{-# LANGUAGE RankNTypes          #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies        #-}
 module Data.Tensor.Matrix where
 
 import           Data.List          (foldl')
@@ -21,9 +15,12 @@ type SimpleMatrix a n = Matrix a a n
 dotM :: (KnownNat a, Num n, Eq n) => SimpleMatrix a n -> SimpleMatrix a n -> SimpleMatrix a n
 dotM = dot
 
+diag :: SimpleMatrix a n -> Vector a n
+diag (Tensor t) = Tensor $ \[s] [i] -> t [s,s] [i,i]
+
 -- | <https://en.wikipedia.org/wiki/Trace_(linear_algebra) Matrix trace>
 trace :: (KnownNat a, Num n) => SimpleMatrix a n -> n
-trace t = let (Tensor f) = contraction t (i0,i1) in f [] []
+trace t = let (Tensor f) = contraction (i0,i1) t in f [] []
 
 -- | <https://en.wikipedia.org/wiki/LU_decomposition LU decomposition> of n x n matrix
 --
