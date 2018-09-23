@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0715cab14bb8553b08ea2cfbb261e36a8874e1162baf39d248fd032045f5ff34
+-- hash: d98f57b7456658c987671bc3076be76e7528bf3e67c9fa7f996b0b1fde5b3f9f
 
 name:           tensors
 version:        0.1.1
@@ -28,12 +28,14 @@ library
       Data.Tensor.Index
       Data.Tensor.Tensor
       Data.Tensor.Matrix
+      Data.Tensor.Space
+      Data.Tensor.Statistics
   hs-source-dirs:
       src
-  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -fno-warn-orphans -fno-warn-missing-signatures
+  default-extensions: RankNTypes PolyKinds ScopedTypeVariables DataKinds KindSignatures TypeFamilies TypeOperators MultiParamTypeClasses FlexibleContexts FlexibleInstances TypeSynonymInstances AllowAmbiguousTypes
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -fno-warn-orphans -fno-warn-missing-signatures
   build-depends:
       base >=4.7 && <5
-    , reflection
     , singletons
     , vector
   default-language: Haskell2010
@@ -45,13 +47,16 @@ test-suite spec
       Data.Tensor
       Data.Tensor.Index
       Data.Tensor.Matrix
+      Data.Tensor.Space
+      Data.Tensor.Statistics
       Data.Tensor.Tensor
       Data.Tensor.Type
       Paths_tensors
   hs-source-dirs:
       test
       src
-  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -fno-warn-orphans -fno-warn-missing-signatures
+  default-extensions: RankNTypes PolyKinds ScopedTypeVariables DataKinds KindSignatures TypeFamilies TypeOperators MultiParamTypeClasses FlexibleContexts FlexibleInstances TypeSynonymInstances AllowAmbiguousTypes
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -fno-warn-orphans -fno-warn-missing-signatures
   build-depends:
       QuickCheck
     , base >=4.7 && <5

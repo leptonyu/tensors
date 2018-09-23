@@ -1,15 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes       #-}
-{-# LANGUAGE DataKinds                 #-}
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE FlexibleInstances         #-}
-{-# LANGUAGE KindSignatures            #-}
-{-# LANGUAGE PolyKinds                 #-}
-{-# LANGUAGE ScopedTypeVariables       #-}
-{-# LANGUAGE TypeFamilies              #-}
-{-# LANGUAGE TypeInType                #-}
-{-# LANGUAGE TypeSynonymInstances      #-}
-{-# LANGUAGE UndecidableInstances      #-}
-
 module Data.Tensor.Index where
 
 import           Data.Proxy
