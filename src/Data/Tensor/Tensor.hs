@@ -39,9 +39,6 @@ type Matrix a b n = Tensor '[a,b] n
 -- > SimpleTensor r 0 Int == Scalar Int
 type SimpleTensor (r :: Nat) (dim :: Nat) n = N.If ((N.==) dim 0) (Scalar n) (Tensor (N.Replicate r dim) n)
 
--- | Tensor rank.
-type TensorRank (s :: [Nat]) = N.Length s
-
 instance (SingI s, Eq n) => Eq (Tensor s n) where
   f == g = all (\i -> f ! i == g ! i ) ([minBound..maxBound] :: [TensorIndex s])
 
@@ -67,7 +64,6 @@ instance (SingI s, Show n) => Show (Tensor s n) where
       g2 n z sep xs = let x = g3 n z xs in "[" ++ intercalate sep x ++ "]"
       {-# INLINE g3 #-}
       g3 n _ xs
-        -- | z > 3 = take 3 xs ++ [ "..", last xs]
         | n > 9 = take 8 xs ++ [ "..", last xs]
         | otherwise = xs
 
@@ -388,7 +384,7 @@ select (pd, pid) t=
     go d i (i',_) _ = let (a,b) = splitAt d i' in a ++ (i:b)
 
 type CheckSlice dim from to s = N.And '[ CheckDim dim s, CheckSelect dim from s, (N.<) from to , (N.<=) to ((N.!!) s dim)]
-type Slice dim from to s = N.Concat '[N.Take dim s, '[(N.-) to from] , N.Tail (N.Drop dim s)]
+type Slice dim from to s = N.Concat '[N.Take dim s, '[to - from] , N.Tail (N.Drop dim s)]
 
 -- | Slice tensor
 --
@@ -411,7 +407,7 @@ slice
      , s' ~ Slice dim from to s
      , KnownNat dim
      , KnownNat from
-     , KnownNat ((N.-) to from)
+     , KnownNat (to - from)
      , SingI s)
   => (Proxy dim, (Proxy from, Proxy to))
   -> Tensor s n
@@ -479,6 +475,76 @@ concatenate p ta@(Tensor a) tb@(Tensor b) =
       sb = shape tb
       n  = sa !! i
   in Tensor $ \_ ind -> let (ai,x:bi) = splitAt i ind in if x >= n then b sb (ai ++ (x-n):bi) else a sa ind
+
+type CheckInsert dim i a b = N.And '[ CheckDim dim b, (N.==) a (Select dim b), (N.>=) i 0, (N.<=) i (TensorDim b dim)]
+type Insert dim a b = N.Concat '[N.Take dim b, '[ TensorDim b dim + 1 ], N.Tail (N.Drop dim b)]
+
+-- | Insert tensor to higher level tensor
+--
+-- > λ> a = [1,2] :: Vector 2 Float
+-- > λ> b = a `dyad` a
+-- > λ> b
+-- > [[1.0,2.0],
+-- > [2.0,4.0]]
+-- > λ> :t b
+-- > b :: Tensor '[2, 2] Float
+-- > λ> c = [1..4] :: Tensor '[1,2,2] Float
+-- > λ> c
+-- > [[[1.0,2.0],
+-- > [3.0,4.0]]]
+-- > λ> d = insert i0 i0 b c
+-- > λ> :t d
+-- > d :: Tensor '[2, 2, 2] Float
+-- > λ> d
+-- > [[[1.0,2.0],
+-- > [2.0,4.0]],
+-- > [[1.0,2.0],
+-- > [3.0,4.0]]]
+-- > λ> insert i0 i1 b c
+-- > [[[1.0,2.0],
+-- > [3.0,4.0]],
+-- > [[1.0,2.0],
+-- > [2.0,4.0]]]
+insert
+  :: (CheckInsert dim i a b ~ 'True
+    , KnownNat i
+    , KnownNat dim
+    , SingI a
+    , SingI b)
+  => Proxy dim
+  -> Proxy i
+  -> Tensor a n
+  -> Tensor b n
+  -> Tensor (Insert dim a b) n
+insert pd px a@(Tensor ta) b@(Tensor tb) =
+  let d = toNat pd
+      i = toNat px
+      sa = shape a
+      sb = shape b
+  in Tensor $ \_ ci -> let (xs,n:ys) = splitAt d ci in if n == i then ta sa (xs++ys) else if n < i then tb sb ci else tb sb (xs ++ ((n-1):ys))
+
+-- | Append tensor to the end of some dimension of other tensor
+--
+-- > λ> a = [1,2] :: Vector 2 Float
+-- > λ> a
+-- > [1.0,2.0]
+-- > λ> b = 3 :: Tensor '[] Float
+-- > λ> b
+-- > 3.0
+-- > λ> append i0 b a
+-- > [1.0,2.0,3.0]
+append
+  :: forall dim a b n.
+    (CheckInsert dim (TensorDim b dim) a b ~ 'True
+    , KnownNat (TensorDim b dim)
+    , KnownNat dim
+    , SingI a
+    , SingI b)
+  => Proxy dim
+  -> Tensor a n
+  -> Tensor b n
+  -> Tensor (Insert dim a b) n
+append pd = insert pd (Proxy :: Proxy (TensorDim b dim))
 
 -- | Convert tensor to untyped function, for internal usage.
 runTensor :: SingI s => Tensor s n -> Index -> n

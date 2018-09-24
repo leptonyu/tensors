@@ -14,23 +14,26 @@ extra-source-files:
 ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -fno-warn-orphans -fno-warn-missing-signatures
 
 default-extensions:
-  - RankNTypes
-  - PolyKinds
-  - ScopedTypeVariables
+  - AllowAmbiguousTypes
   - DataKinds
-  - KindSignatures
-  - TypeFamilies
-  - TypeOperators
-  - MultiParamTypeClasses
+  - ExistentialQuantification
   - FlexibleContexts
   - FlexibleInstances
+  - FunctionalDependencies
+  - KindSignatures
+  - MultiParamTypeClasses
+  - PolyKinds
+  - RankNTypes
+  - ScopedTypeVariables
+  - TypeFamilies
+  - TypeOperators
   - TypeSynonymInstances
-  - AllowAmbiguousTypes
 
 dependencies:
   - base >= 4.7 && < 5
   - vector
   - singletons
+  - reflection
 
 library:
   source-dirs: src
