@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d98f57b7456658c987671bc3076be76e7528bf3e67c9fa7f996b0b1fde5b3f9f
+-- hash: 713a0817f9d05205aae6cb07aaf3669b5d3726e46d2d648fae7f6465649fa2aa
 
 name:           tensors
 version:        0.1.1
@@ -32,10 +32,11 @@ library
       Data.Tensor.Statistics
   hs-source-dirs:
       src
-  default-extensions: RankNTypes PolyKinds ScopedTypeVariables DataKinds KindSignatures TypeFamilies TypeOperators MultiParamTypeClasses FlexibleContexts FlexibleInstances TypeSynonymInstances AllowAmbiguousTypes
+  default-extensions: AllowAmbiguousTypes DataKinds ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies KindSignatures MultiParamTypeClasses PolyKinds RankNTypes ScopedTypeVariables TypeFamilies TypeOperators TypeSynonymInstances
   ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -fno-warn-orphans -fno-warn-missing-signatures
   build-depends:
       base >=4.7 && <5
+    , reflection
     , singletons
     , vector
   default-language: Haskell2010
@@ -55,7 +56,7 @@ test-suite spec
   hs-source-dirs:
       test
       src
-  default-extensions: RankNTypes PolyKinds ScopedTypeVariables DataKinds KindSignatures TypeFamilies TypeOperators MultiParamTypeClasses FlexibleContexts FlexibleInstances TypeSynonymInstances AllowAmbiguousTypes
+  default-extensions: AllowAmbiguousTypes DataKinds ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies KindSignatures MultiParamTypeClasses PolyKinds RankNTypes ScopedTypeVariables TypeFamilies TypeOperators TypeSynonymInstances
   ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -fno-warn-orphans -fno-warn-missing-signatures
   build-depends:
       QuickCheck

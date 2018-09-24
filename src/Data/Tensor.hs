@@ -117,12 +117,24 @@ module Data.Tensor(
   , CheckConcatenate
   , Concatenate
   , concatenate
+  , CheckInsert
+  , Insert
+  , insert
+  , append
   -- ** Tensor Space
   , linspace
   , geospace
   , logspace
   , CheckGrid
   , grid
+  , meshgrid2
+  , meshgrid3
+  , meshgrid4
+  , meshgrid5
+  , meshgrid6
+  , meshgrid7
+  , meshgrid8
+  , meshgrid9
   -- * Matrix Operation
   , SimpleMatrix
   , det
