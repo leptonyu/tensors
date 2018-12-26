@@ -1,8 +1,10 @@
--- This file has been generated from package.yaml by hpack version 0.28.2.
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 713a0817f9d05205aae6cb07aaf3669b5d3726e46d2d648fae7f6465649fa2aa
+-- hash: dbd547840dd8d9ad019059dbf09c36ab86d33914720ce19ab71a4fd3926ef044
 
 name:           tensors
 version:        0.1.1
@@ -16,7 +18,6 @@ copyright:      (c) 2018 Daniel YU
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
-cabal-version:  >= 1.10
 extra-source-files:
     README.md
 
