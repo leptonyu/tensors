@@ -1,5 +1,5 @@
 name:                tensors
-version:             0.1.1
+version:             0.1.2
 synopsis:            Tensor in Haskell
 description:         Tensor use type level programming in haskell.
 homepage:            https://github.com/leptonyu/tensors#readme
