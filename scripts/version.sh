@@ -21,6 +21,6 @@ if echo "$1" | grep -vq '[0-9][0-9]*\(\.[0-9][0-9]*\)*' ; then
   exit 1
 fi
 
-pkg=salak
+pkg=tensors
 sed -i.bak "s|version:\(  *\)[0-9][0-9]*\(\.[0-9][0-9]*\)*|version:\1$1|" $pkg.cabal
 rm -f $pkg.cabal.bak
