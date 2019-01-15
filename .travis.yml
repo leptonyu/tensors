@@ -1,18 +1,23 @@
-# This is the simple Travis configuration, which is intended for use
-# on applications which do not require cross-platform and
-# multiple-GHC-version support. For more information and other
-# options, see:
-#
-# https://docs.haskellstack.org/en/stable/travis_ci/
-#
-# Copy these contents into the root directory of your Github project in a file
-# named .travis.yml
+# simplified haskell-ci Travis setup
+# see also https://github.com/haskell-CI/haskell-ci
 
-# Use new container infrastructure to enable caching
+language: haskell
 sudo: enabled
 
-# Do not choose a language; we provide our own build tools.
-language: haskell
+cache:
+  directories:
+   - $HOME/.cabal/store
 
+cabal: 2.4
 ghc:
-  - "8.4"
+  - "8.6.3"
+  - "8.4.4"
+
+install:
+ - cabal --version
+ - ghc --version
+
+script:
+ - cabal v2-update
+ - cabal v2-build all
+ - cabal v2-test --enable-test all

@@ -1,13 +1,13 @@
-cabal-version: 0.1.3
+cabal-version: 1.12
 
 -- This file has been generated from package.yaml by hpack version 0.31.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 24a5f9d7d69025d241f6792edc47d005508f00616d6be677ba632838227bd854
+-- hash: d52bca4a6842b69a6d20b1a6842d577f661583d10fb523e1e6591c757e216138
 
 name:           tensors
-version:        0.1.3
+version:        0.1.2
 synopsis:       Tensor in Haskell
 description:    Tensor use type level programming in haskell.
 category:       Library
@@ -36,10 +36,11 @@ library
   default-extensions: AllowAmbiguousTypes DataKinds ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies KindSignatures MultiParamTypeClasses PolyKinds RankNTypes ScopedTypeVariables TypeFamilies TypeOperators TypeSynonymInstances
   ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -fno-warn-orphans -fno-warn-missing-signatures
   build-depends:
-      base >=4.7 && <5
-    , reflection
-    , singletons
-    , vector
+      QuickCheck >=2.11.1 && <2.13
+    , base >=4.7 && <5
+    , reflection >=2.1.4 && <2.2
+    , singletons >=2.4.1 && <2.6
+    , vector >=0.12.0.2 && <0.13
   default-language: Haskell2010
 
 test-suite spec
@@ -63,7 +64,7 @@ test-suite spec
       QuickCheck
     , base >=4.7 && <5
     , hspec ==2.*
-    , reflection
-    , singletons
-    , vector
+    , reflection >=2.1.4 && <2.2
+    , singletons >=2.4.1 && <2.6
+    , vector >=0.12.0.2 && <0.13
   default-language: Haskell2010

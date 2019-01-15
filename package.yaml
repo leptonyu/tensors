@@ -31,9 +31,9 @@ default-extensions:
 
 dependencies:
   - base >= 4.7 && < 5
-  - vector
-  - singletons
-  - reflection
+  - vector >=0.12.0.2 && <0.13
+  - singletons >=2.4.1 && <2.6
+  - reflection >=2.1.4 && <2.2
 
 library:
   source-dirs: src
@@ -54,5 +54,5 @@ tests:
       - src
     dependencies:
       - hspec == 2.*
-      - QuickCheck
-      - reflection
+      - QuickCheck >=2.11.1 && <2.13
+      - reflection >=2.1.4 && <2.2
