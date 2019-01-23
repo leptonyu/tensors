@@ -18,24 +18,21 @@ natsVal _ = case (sing :: Sing s) of
   SNil         -> []
   (SCons x xs) -> unsafeCoerce <$> (fromSing x: fromSing xs)
 
-viToti :: Index -> Int -> Index
-viToti s i = snd $ foldl' go (i,[]) (reverse s)
+viToti :: Shape -> Int -> Index
+viToti s i = go i [] (reverse s)
   where
     {-# INLINE go #-}
-    go (i',x) n = let (d,r) = divMod i' n in (d,r:x)
+    go _ xs [] = xs
+    go r xs (si:ss) = let (r',x) = divMod r si in go r' (x:xs) ss
 
-tiTovi :: Index -> Index -> Int
-tiTovi = go 0
-  where
-    {-# INLINE go #-}
-    go i (n:ns) (ind:inds) = go (i * n + ind) ns inds
-    go i _ _               = i
+tiTovi :: Shape -> Index -> Int
+tiTovi s i = foldl' (\b (n,ind) -> b * n + ind) 0 $ zipWith (,) s i 
 
 mult :: (Eq a, Num a) => a -> a -> a
-mult a b = case a of
-  0 -> 0
-  c -> c * b
-
+mult a b
+  | a == 0 = 0
+  | b == 0 = 0
+  | otherwise = a * b
 -----------------------
 -- Tensor Type Index
 -----------------------

@@ -1,8 +1,10 @@
 {-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE BangPatterns #-} 
 
 module Data.Tensor.Tensor where
 
+import           Control.DeepSeq
 import           Data.List                    (intercalate)
 import           Data.Proxy
 import           Data.Singletons
@@ -42,8 +44,11 @@ type SimpleTensor (r :: Nat) (dim :: Nat) n = N.If ((N.==) dim 0) (Scalar n) (Te
 instance (SingI s, Eq n) => Eq (Tensor s n) where
   f == g = all (\i -> f ! i == g ! i ) ([minBound..maxBound] :: [TensorIndex s])
 
+instance (SingI s, NFData n) => NFData (Tensor s n) where
+  rnf t = rnf $ fmap (rnf . (t !))  ([minBound..maxBound] :: [TensorIndex s])
+
 instance SingI s => Functor (Tensor s) where
-  fmap f (Tensor t) = Tensor (\s i -> f (t s i))
+  fmap f (Tensor t) = Tensor $ \s i -> f (t s i)
 
 instance SingI s => Applicative (Tensor s) where
   pure n = Tensor $ \_ _ -> n
@@ -112,10 +117,14 @@ generateTensor fn p =
 {-# INLINE transformTensor #-}
 transformTensor
   :: forall s s' n. SingI s
-  => (([Int], [Int]) -> [Int] -> [Int])
+  => (Shape -> (Shape, Index) -> Index)
   -> Tensor s  n
   -> Tensor s' n
-transformTensor go (Tensor f) = let s = natsVal (Proxy :: Proxy s) in Tensor $ \s' i' -> f s (go (i',s') s)
+transformTensor go (Tensor fo) =
+  let s = natsVal (Proxy :: Proxy s)
+      {-# INLINE g #-}
+      g = curry $ fo s . go s
+  in Tensor g
 
 -- | Clone tensor to a new `V.Vector` based tensor
 clone :: SingI s => Tensor s n -> Tensor s n
@@ -161,7 +170,7 @@ reshape :: (N.Product s ~ N.Product s', SingI s) => Tensor s n -> Tensor s' n
 reshape = transformTensor go
   where
     {-# INLINE go #-}
-    go (i',s') s = viToti s $ tiTovi s' i'
+    go s (s',i') = viToti s $ tiTovi s' i'
 
 type Transpose (a :: [Nat]) = N.Reverse a
 
@@ -180,7 +189,7 @@ transpose :: SingI a => Tensor a n -> Tensor (Transpose a) n
 transpose  = transformTensor go
   where
     {-# INLINE go #-}
-    go (i',_) _ = reverse i'
+    go _ (_, i') = reverse i'
 
 type CheckSwapaxes i j s = N.And '[ (N.>=) i 0, (N.<) i j, (N.<) j (N.Length s)]
 type Swapaxes i j s = N.Concat '[N.Take i s, '[(N.!!) s j], N.Tail (N.Drop i (N.Take j s)) , '[(N.!!) s i], N.Tail (N.Drop j s)]
@@ -223,7 +232,7 @@ swapaxes
 swapaxes px pj =
   let i = toNat px
       j = toNat pj
-      go (s,_) _ = take i s ++ [s !! j] ++ tail (drop i (take j s)) ++ [s!!i] ++ tail (drop j s)
+      go _ (_,s) = take i s ++ [s !! j] ++ tail (drop i (take j s)) ++ [s!!i] ++ tail (drop j s)
   in transformTensor go
 
 -- | Unit tensor of shape s, if all the indices are equal then return 1, otherwise return 0.
@@ -306,10 +315,10 @@ dot t1 t2 =
   let s1 = shape t1
       n  = last s1
       b  = length s1 - 1
+      f (!x,!y) = (t1 ! TensorIndex x) `mult` (t2 ! TensorIndex y)
   in generateTensor (\i ->
         let (ti1,ti2) = splitAt b i
-        in sum $ fmap (\(x,y) -> (t1 ! TensorIndex x) `mult` (t2 ! TensorIndex y)) [(ti1++[x],x:ti2)| x <- [0..n-1]]) Proxy
-
+        in sum $ f <$> [(ti1++[x],x:ti2)| x <- [0..n-1]]) Proxy
 
 type CheckContraction s x y = N.And '[(N.<) x y, (N.>=) x 0, (N.<) y (TensorRank s)]
 type Contraction s x y = DropIndex (DropIndex s y) x
@@ -381,7 +390,7 @@ select (pd, pid) t=
   in transformTensor (go dim ind) t
   where
     {-# INLINE go #-}
-    go d i (i',_) _ = let (a,b) = splitAt d i' in a ++ (i:b)
+    go d i _ (_,i') = let (a,b) = splitAt d i' in a ++ (i:b)
 
 type CheckSlice dim from to s = N.And '[ CheckDim dim s, CheckSelect dim from s, (N.<) from to , (N.<=) to ((N.!!) s dim)]
 type Slice dim from to s = N.Concat '[N.Take dim s, '[to - from] , N.Tail (N.Drop dim s)]
@@ -415,7 +424,7 @@ slice
 slice (pd, (pa,_)) t =
   let d = toNat pd
       a = toNat pa
-  in transformTensor (\(i',_) _ -> let (x,y:ys) = splitAt d i' in x ++ (y+a:ys)) t
+  in transformTensor (\_ (_,i') -> let (x,y:ys) = splitAt d i' in x ++ (y+a:ys)) t
 
 -- | Expand tensor
 --
@@ -436,7 +445,7 @@ expand
 expand = transformTensor go
   where
     {-# INLINE go #-}
-    go (i',_) = zipWith mod i'
+    go s (_, i') = zipWith mod i' s
 
 type CheckConcatenate i a b = N.And '[ (N.==) (N.Length a) (N.Length b), (N.>=) i 0, (N.<) i (N.Length a), (N.==) (Select i a) (Select i b) ]
 type Concatenate i a b = N.Concat '[N.Take i a, '[(N.+) (TensorDim a i) (TensorDim b i)], N.Tail (N.Drop i a)]

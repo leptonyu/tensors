@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d52bca4a6842b69a6d20b1a6842d577f661583d10fb523e1e6591c757e216138
+-- hash: 4974bc712370768798f8e5f6ad6bd80bf430622c500d69ee4b826d7547ebeb8e
 
 name:           tensors
 version:        0.1.2
@@ -36,8 +36,8 @@ library
   default-extensions: AllowAmbiguousTypes DataKinds ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies KindSignatures MultiParamTypeClasses PolyKinds RankNTypes ScopedTypeVariables TypeFamilies TypeOperators TypeSynonymInstances
   ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -fno-warn-orphans -fno-warn-missing-signatures
   build-depends:
-      QuickCheck >=2.11.1 && <2.13
-    , base >=4.7 && <5
+      base >=4.7 && <5
+    , deepseq
     , reflection >=2.1.4 && <2.2
     , singletons >=2.4.1 && <2.6
     , vector >=0.12.0.2 && <0.13
@@ -61,9 +61,36 @@ test-suite spec
   default-extensions: AllowAmbiguousTypes DataKinds ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies KindSignatures MultiParamTypeClasses PolyKinds RankNTypes ScopedTypeVariables TypeFamilies TypeOperators TypeSynonymInstances
   ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -fno-warn-orphans -fno-warn-missing-signatures
   build-depends:
-      QuickCheck
+      QuickCheck >=2.11.1 && <2.13
     , base >=4.7 && <5
+    , deepseq
     , hspec ==2.*
+    , reflection >=2.1.4 && <2.2
+    , singletons >=2.4.1 && <2.6
+    , vector >=0.12.0.2 && <0.13
+  default-language: Haskell2010
+
+benchmark bm
+  type: exitcode-stdio-1.0
+  main-is: Bench.hs
+  other-modules:
+      Data.Tensor
+      Data.Tensor.Index
+      Data.Tensor.Matrix
+      Data.Tensor.Space
+      Data.Tensor.Statistics
+      Data.Tensor.Tensor
+      Data.Tensor.Type
+      Paths_tensors
+  hs-source-dirs:
+      bench
+      src
+  default-extensions: AllowAmbiguousTypes DataKinds ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies KindSignatures MultiParamTypeClasses PolyKinds RankNTypes ScopedTypeVariables TypeFamilies TypeOperators TypeSynonymInstances
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -fno-warn-orphans -fno-warn-missing-signatures
+  build-depends:
+      base >=4.7 && <5
+    , criterion
+    , deepseq
     , reflection >=2.1.4 && <2.2
     , singletons >=2.4.1 && <2.6
     , vector >=0.12.0.2 && <0.13
