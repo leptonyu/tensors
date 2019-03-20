@@ -1,19 +1,16 @@
 {-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-}
+{-# LANGUAGE BangPatterns         #-}
+{-# LANGUAGE ConstraintKinds      #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE BangPatterns #-} 
 
 module Data.Tensor.Tensor where
 
-import           Control.DeepSeq
-import           Data.List                    (intercalate)
+import           Data.List        (intercalate)
 import           Data.Proxy
-import           Data.Singletons
-import qualified Data.Singletons.Prelude      as N
-import qualified Data.Singletons.Prelude.List as N
-import           Data.Tensor.Index
 import           Data.Tensor.Type
-import qualified Data.Vector                  as V
-import           GHC.Exts                     (IsList (..))
+import           Data.Type.Bool   hiding (If)
+import qualified Data.Vector      as V
+import           GHC.Exts         (IsList (..))
 import           GHC.TypeLits
 
 -----------------------
@@ -39,26 +36,26 @@ type Matrix a b n = Tensor '[a,b] n
 --
 -- > SimpleTensor 2 3 Int == Matrix 3 3 Int == Tensor '[3,3] Int
 -- > SimpleTensor r 0 Int == Scalar Int
-type SimpleTensor (r :: Nat) (dim :: Nat) n = N.If ((N.==) dim 0) (Scalar n) (Tensor (N.Replicate r dim) n)
+type SimpleTensor (r :: Nat) (dim :: Nat) n = Tensor (Replicate r dim) n
 
-instance (SingI s, Eq n) => Eq (Tensor s n) where
-  f == g = all (\i -> f ! i == g ! i ) ([minBound..maxBound] :: [TensorIndex s])
+instance Functor (Tensor s) where
+  fmap f t = Tensor $ \s i -> f (getValue t s i)
 
-instance (SingI s, NFData n) => NFData (Tensor s n) where
-  rnf t = rnf $ fmap (rnf . (t !))  ([minBound..maxBound] :: [TensorIndex s])
-
-instance SingI s => Functor (Tensor s) where
-  fmap f (Tensor t) = Tensor $ \s i -> f (t s i)
-
-instance SingI s => Applicative (Tensor s) where
+instance Applicative (Tensor s) where
   pure n = Tensor $ \_ _ -> n
-  Tensor f <*> Tensor t = Tensor $ \s i -> f s i (t s i)
+  f <*> t = Tensor $ \s i -> getValue f s i (getValue t s i)
 
-instance SingI s => Foldable (Tensor s) where
-  foldMap f t = foldMap (f.(t !)) ([minBound..maxBound] :: [TensorIndex s])
+instance (HasShape s, Eq n) => Eq (Tensor s n) where
+  f == t = and $ (==) <$> f <*> t
 
-instance (SingI s, Show n) => Show (Tensor s n) where
-  show (Tensor f) = let s = natsVal (Proxy :: Proxy s) in go 0 [] s (f s)
+instance HasShape s => Foldable (Tensor s) where
+  foldr f b t =
+    let s = shape t
+        r = toSize (Proxy :: Proxy s)
+    in foldr (\i -> f (getValue t s $ viToti s i)) b [0..r-1]
+
+instance (HasShape s, Show n) => Show (Tensor s n) where
+  show (Tensor f) = let s = unShape (toShape :: SShape s) in go 0 [] s (f s)
     where
       {-# INLINE go #-}
       go :: Int -> [Int] -> [Int] -> (Index -> n) -> String
@@ -75,7 +72,7 @@ instance (SingI s, Show n) => Show (Tensor s n) where
 -----------------------
 -- Tensor as Num
 -----------------------
-instance (SingI s, Num n) => Num (Tensor s n) where
+instance (HasShape s, Num n) => Num (Tensor s n) where
   (+) = zipWithTensor (+)
   (*) = zipWithTensor (*)
   abs = fmap abs
@@ -83,16 +80,16 @@ instance (SingI s, Num n) => Num (Tensor s n) where
   negate = fmap negate
   fromInteger = pure . fromInteger
 
-instance (SingI s, Fractional n) => Fractional (Tensor s n) where
+instance (HasShape s, Fractional n) => Fractional (Tensor s n) where
   fromRational = pure . fromRational
   (/) = zipWithTensor (/)
 
-instance (SingI s, Floating n) => Floating (Tensor s n) where
+instance (HasShape s, Floating n) => Floating (Tensor s n) where
   pi      = pure pi
   exp     = fmap exp
   log     = fmap log
   sqrt    = fmap sqrt
-  logBase = error "undefined"
+  logBase a b = logBase <$> a <*> b
   sin     = fmap sin
   cos     = fmap cos
   tan     = fmap tan
@@ -108,71 +105,79 @@ instance (SingI s, Floating n) => Floating (Tensor s n) where
 
 
 {-# INLINE generateTensor #-}
-generateTensor :: SingI s => (Index -> n) -> Proxy s -> Tensor s n
-generateTensor fn p =
-  let s  = natsVal p
-      ps = product s
-  in if ps == 0 then pure (fn [0]) else Tensor $ const fn
+generateTensor :: forall s n. HasShape s => (Index -> n) -> Tensor s n
+generateTensor fn = case toSize (Proxy :: Proxy s) of
+  0 -> pure (fn [])
+  _ -> Tensor (const fn)
 
 {-# INLINE transformTensor #-}
 transformTensor
-  :: forall s s' n. SingI s
+  :: forall s s' n. HasShape s
   => (Shape -> (Shape, Index) -> Index)
   -> Tensor s  n
   -> Tensor s' n
 transformTensor go (Tensor fo) =
-  let s = natsVal (Proxy :: Proxy s)
+  let s = unShape (toShape :: SShape s)
       {-# INLINE g #-}
       g = curry $ fo s . go s
   in Tensor g
 
 -- | Clone tensor to a new `V.Vector` based tensor
-clone :: SingI s => Tensor s n -> Tensor s n
+clone :: HasShape s => Tensor s n -> Tensor s n
 clone t =
   let s = shape t
-      v = V.generate (product s) (\i -> t ! toEnum i)
+      v = V.generate (product s) (gx t s)
   in Tensor $ \_ i -> v V.! tiTovi s i
 
 {-# INLINE zipWithTensor #-}
-zipWithTensor :: SingI s => (n -> n -> n) -> Tensor s n -> Tensor s n -> Tensor s n
-zipWithTensor f t1 t2 = generateTensor (\i -> f (t1 ! TensorIndex i) (t2 ! TensorIndex i)) Proxy
+zipWithTensor :: HasShape s => (n -> n -> n) -> Tensor s n -> Tensor s n -> Tensor s n
+zipWithTensor f t1 t2 =
+  let s1 = shape t1
+      s2 = shape t2
+  in generateTensor (\i -> f (getValue t1 s1 i) (getValue t2 s2 i))
 
-instance SingI s => IsList (Tensor s n) where
+instance HasShape s => IsList (Tensor s n) where
   type Item (Tensor s n) = n
   fromList v =
-    let s = natsVal (Proxy :: Proxy s)
+    let s = unShape (toShape :: SShape s)
         l = product s
     in if l /= length v
       then error "length not match"
       else let vv = V.fromList v in Tensor $ \s' i -> vv V.! tiTovi s' i
-  toList  t = let n = rank t - 1 in fmap (\i -> t ! toEnum i) [0..n]
+  toList  t =
+    let n = rank t - 1
+        s = unShape (toShape :: SShape s)
+    in fmap (gx t s) [0..n]
 
 -----------------------
 -- Tensor Shape
 -----------------------
 -- | Shape of Tensor, is a list of integers, uniquely determine the shape of tensor.
-shape :: forall s n. SingI s => Tensor s n -> [Int]
-shape _ = natsVal (Proxy :: Proxy s)
+shape :: forall s n. HasShape s => Tensor s n -> [Int]
+shape _ = unShape (toShape :: SShape s)
 
 -- | Rank of Tensor
-rank :: SingI s => Tensor s n -> Int
-rank = length . shape
+rank :: forall s n. HasShape s => Tensor s n -> Int
+rank _ = toRank (Proxy :: Proxy s)
 
 -----------------------
 -- Tensor Operation
 -----------------------
 -- | Get value from tensor by index
-(!) :: SingI s => Tensor s n -> TensorIndex s -> n
+(!) :: HasShape s => Tensor s n -> TensorIndex s -> n
 (!) t (TensorIndex i) = getValue t (shape t) i
 
+gx :: HasShape s => Tensor s n -> Shape -> Int -> n
+gx (Tensor t) s i = t s (viToti s i)
+
 -- | Reshape a tensor to another tensor, with total dimensions are equal.
-reshape :: (N.Product s ~ N.Product s', SingI s) => Tensor s n -> Tensor s' n
+reshape :: (TensorSize s ~ TensorSize s', HasShape s) => Tensor s n -> Tensor s' n
 reshape = transformTensor go
   where
     {-# INLINE go #-}
     go s (s',i') = viToti s $ tiTovi s' i'
 
-type Transpose (a :: [Nat]) = N.Reverse a
+type Transpose (a :: [Nat]) = Reverse a '[]
 
 -- | <https://en.wikipedia.org/wiki/Transpose Transpose> tensor completely
 --
@@ -185,14 +190,13 @@ type Transpose (a :: [Nat]) = N.Reverse a
 -- > [[1,4,7],
 -- > [2,5,8],
 -- > [3,6,9]]
-transpose :: SingI a => Tensor a n -> Tensor (Transpose a) n
+transpose :: HasShape a => Tensor a n -> Tensor (Transpose a) n
 transpose  = transformTensor go
   where
     {-# INLINE go #-}
     go _ (_, i') = reverse i'
 
-type CheckSwapaxes i j s = N.And '[ (N.>=) i 0, (N.<) i j, (N.<) j (N.Length s)]
-type Swapaxes i j s = N.Concat '[N.Take i s, '[(N.!!) s j], N.Tail (N.Drop i (N.Take j s)) , '[(N.!!) s i], N.Tail (N.Drop j s)]
+type Swapaxes i j s = Take i s ++ (Dimension s j : (Drop i (Take j s))) ++ (Dimension s j : (Tail (Drop j s)))
 
 -- | Swapaxes any rank
 --
@@ -220,15 +224,14 @@ type Swapaxes i j s = N.Concat '[N.Take i s, '[(N.!!) s j], N.Tail (N.Drop i (N.
 --
 -- > transpose == swapaxes i0 i1
 swapaxes
-  :: (Swapaxes i j s ~ s'
-    , CheckSwapaxes i j s ~ 'True
-    , SingI s
+  :: (CheckIndices i j s
+    , HasShape s
     , KnownNat i
     , KnownNat j)
   => Proxy i
   -> Proxy j
   -> Tensor s n
-  -> Tensor s' n
+  -> Tensor (Swapaxes i j s) n
 swapaxes px pj =
   let i = toNat px
       j = toNat pj
@@ -236,8 +239,8 @@ swapaxes px pj =
   in transformTensor go
 
 -- | Unit tensor of shape s, if all the indices are equal then return 1, otherwise return 0.
-identity :: forall s n . (SingI s, Num n) => Tensor s n
-identity = generateTensor go Proxy
+identity :: forall s n . (HasShape s, Num n) => Tensor s n
+identity = generateTensor go
   where
     go []  = 0
     go [_] = 1
@@ -246,17 +249,19 @@ identity = generateTensor go Proxy
       | otherwise = go (b:cs)
 
 dyad'
-  :: ( r ~ (N.++) s t
-     , SingI s
-     , SingI t
-     , SingI r)
+  :: ( r ~ (s ++ t)
+     , HasShape s
+     , HasShape t
+     , HasShape r)
   => (n -> m -> o)
   -> Tensor s n
   -> Tensor t m
   -> Tensor r o
 dyad' f t1 t2 =
   let l = rank t1
-  in generateTensor (\i -> let (ti1,ti2) = splitAt l i in f (t1 ! TensorIndex ti1) (t2 ! TensorIndex ti2)) Proxy
+      s1 = shape t1
+      s2 = shape t2
+  in generateTensor (\i -> let (ti1,ti2) = splitAt l i in f (getValue t1 s1 ti1) (getValue t2 s2 ti2))
 
 -- | <https://en.wikipedia.org/wiki/Dyadics Dyadic Tensor>
 --
@@ -276,17 +281,17 @@ dyad' f t1 t2 =
 -- > [[4,8],
 -- > [12,16]]]]
 dyad
-  :: ( r ~ (N.++) s t
-     , SingI s
-     , SingI t
-     , SingI r
+  :: ( r ~ (s ++ t)
+     , HasShape s
+     , HasShape t
+     , HasShape r
      , Num n
      , Eq n)
   => Tensor s n -> Tensor t n -> Tensor r n
 dyad = dyad' mult
 
 
-type DotTensor s1 s2 = (N.++) (N.Init s1) (N.Tail s2)
+type DotTensor s1 s2 = Init s1 ++ Init s2
 
 -- | Tensor Product
 --
@@ -302,28 +307,28 @@ type DotTensor s1 s2 = (N.++) (N.Init s1) (N.Tail s2)
 --
 -- For rank 2 tensor, it is just matrix product.
 dot
-  :: ( N.Last s ~ N.Head s'
-     , SingI (DotTensor s s')
-     , SingI s
-     , SingI s'
+  :: ( Last s ~ Head s'
+     , r ~ DotTensor s s'
+     , HasShape s
+     , HasShape s'
+     , HasShape r
      , Num n
      , Eq n)
   => Tensor s n
   -> Tensor s' n
-  -> Tensor (DotTensor s s') n
+  -> Tensor r n
 dot t1 t2 =
   let s1 = shape t1
+      s2 = shape t2
       n  = last s1
       b  = length s1 - 1
-      f (!x,!y) = (t1 ! TensorIndex x) `mult` (t2 ! TensorIndex y)
+      f (!x,!y) = (getValue t1 s1 x) `mult` (getValue t2 s2 y)
   in generateTensor (\i ->
         let (ti1,ti2) = splitAt b i
-        in sum $ f <$> [(ti1++[x],x:ti2)| x <- [0..n-1]]) Proxy
+        in sum $ f <$> [(ti1++[x],x:ti2)| x <- [0..n-1]])
 
-type CheckContraction s x y = N.And '[(N.<) x y, (N.>=) x 0, (N.<) y (TensorRank s)]
 type Contraction s x y = DropIndex (DropIndex s y) x
-type TensorDim s i = (N.!!) s i
-type DropIndex (s :: [Nat]) (i :: Nat) = (N.++) (N.Fst (N.SplitAt i s)) (N.Tail (N.Snd (N.SplitAt i s)))
+type DropIndex s i = Take i s ++ Drop (i+1) s
 
 -- | Contraction Tensor
 --
@@ -339,14 +344,14 @@ type DropIndex (s :: [Nat]) (i :: Nat) = (N.++) (N.Fst (N.SplitAt i s)) (N.Tail 
 -- In rank 2 tensor, contraction of tensor is just the <https://en.wikipedia.org/wiki/Trace_(linear_algebra) trace>.
 contraction
   :: forall x y s s' n.
-     ( CheckContraction s x y ~ 'True
+     ( CheckIndices x y s
      , s' ~ Contraction s x y
-     , TensorDim s x ~ TensorDim s y
+     , Dimension s x ~ Dimension s y
      , KnownNat x
      , KnownNat y
-     , SingI s
-     , SingI s'
-     , KnownNat  (TensorDim s x)
+     , HasShape s
+     , HasShape s'
+     , KnownNat (Dimension s x)
      , Num n)
   => (Proxy x, Proxy y)
   -> Tensor s  n
@@ -354,9 +359,9 @@ contraction
 contraction (px, py) t@(Tensor f) =
   let x  = toNat px
       y  = toNat py
-      n  = toNat (Proxy :: Proxy (TensorDim s x))
+      n  = toNat (Proxy :: Proxy (Dimension s x))
       s  = shape t
-  in generateTensor (go x (y-x-1) n (f s) ) Proxy
+  in generateTensor (go x (y-x-1) n (f s) )
   where
     {-# INLINE go #-}
     go a b n fs i =
@@ -364,9 +369,7 @@ contraction (px, py) t@(Tensor f) =
           (r3,r4) = splitAt b rt
       in sum $ fmap fs [r1 ++ (j:r3) ++ (j:r4) | j <- [0..n-1]]
 
-type CheckDim dim s = N.And '[(N.>=) dim 0, (N.<) dim (N.Length s)]
-type CheckSelect dim i s = N.And '[ CheckDim dim s , (N.>=) i 0, (N.<) i ((N.!!) s dim) ]
-type Select i s = (N.++) (N.Take i s) (N.Tail (N.Drop i s))
+type CheckSelect dim i s = (CheckDimension dim s && IsIndex i (Dimension s dim)) ~ 'True
 
 -- | Select `i` indexing of tensor
 --
@@ -376,14 +379,13 @@ type Select i s = (N.++) (N.Take i s) (N.Tail (N.Drop i s))
 -- > λ> select (i0,i1) a
 -- > [0,1,0,0]
 select
-  :: ( CheckSelect dim i s ~ 'True
-     , s' ~ Select dim s
-     , SingI s
+  :: ( CheckSelect dim i s
+     , HasShape s
      , KnownNat dim
      , KnownNat i)
   => (Proxy dim, Proxy i)
   -> Tensor s n
-  -> Tensor s' n
+  -> Tensor (DropIndex s dim) n
 select (pd, pid) t=
   let dim = toNat pd
       ind = toNat pid
@@ -392,8 +394,8 @@ select (pd, pid) t=
     {-# INLINE go #-}
     go d i _ (_,i') = let (a,b) = splitAt d i' in a ++ (i:b)
 
-type CheckSlice dim from to s = N.And '[ CheckDim dim s, CheckSelect dim from s, (N.<) from to , (N.<=) to ((N.!!) s dim)]
-type Slice dim from to s = N.Concat '[N.Take dim s, '[to - from] , N.Tail (N.Drop dim s)]
+type CheckSlice dim from to s = (CheckDimension dim s && IsIndices from to (Dimension s dim)) ~ 'True
+type Slice dim from to s = Take dim s ++ ( to - from : Tail (Drop dim s))
 
 -- | Slice tensor
 --
@@ -412,12 +414,12 @@ type Slice dim from to s = N.Concat '[N.Take dim s, '[to - from] , N.Tail (N.Dro
 -- > [0,1],
 -- > [0,0]]
 slice
-  :: ( CheckSlice dim from to s ~ 'True
+  :: ( CheckSlice dim from to s
      , s' ~ Slice dim from to s
      , KnownNat dim
      , KnownNat from
      , KnownNat (to - from)
-     , SingI s)
+     , HasShape s)
   => (Proxy dim, (Proxy from, Proxy to))
   -> Tensor s n
   -> Tensor s' n
@@ -439,7 +441,7 @@ slice (pd, (pa,_)) t =
 -- > [0,1,0,1]]
 expand
   :: (TensorRank s ~ TensorRank s'
-     , SingI s)
+     , HasShape s)
   => Tensor s n
   -> Tensor s' n
 expand = transformTensor go
@@ -447,8 +449,8 @@ expand = transformTensor go
     {-# INLINE go #-}
     go s (_, i') = zipWith mod i' s
 
-type CheckConcatenate i a b = N.And '[ (N.==) (N.Length a) (N.Length b), (N.>=) i 0, (N.<) i (N.Length a), (N.==) (Select i a) (Select i b) ]
-type Concatenate i a b = N.Concat '[N.Take i a, '[(N.+) (TensorDim a i) (TensorDim b i)], N.Tail (N.Drop i a)]
+type CheckConcatenate i a b = (IsIndex i (TensorRank a)) ~ 'True
+type Concatenate i a b = Take i a ++ (Dimension a i + Dimension b i : Drop (i+1) a)
 
 -- | Join a sequence of arrays along an existing axis.
 --
@@ -469,10 +471,12 @@ type Concatenate i a b = N.Concat '[N.Take i a, '[(N.+) (TensorDim a i) (TensorD
 -- > [[1,2,1,1],
 -- > [3,4,1,1]]
 concatenate
-  :: (CheckConcatenate i a b ~ 'True
+  :: ( TensorRank a ~ TensorRank b
+    , DropIndex a i ~ DropIndex b i
+    , CheckConcatenate i a b
     , Concatenate i a b ~ c
-    , SingI a
-    , SingI b
+    , HasShape a
+    , HasShape b
     , KnownNat i)
   => Proxy i
   -> Tensor a n
@@ -485,8 +489,8 @@ concatenate p ta@(Tensor a) tb@(Tensor b) =
       n  = sa !! i
   in Tensor $ \_ ind -> let (ai,x:bi) = splitAt i ind in if x >= n then b sb (ai ++ (x-n):bi) else a sa ind
 
-type CheckInsert dim i a b = N.And '[ CheckDim dim b, (N.==) a (Select dim b), (N.>=) i 0, (N.<=) i (TensorDim b dim)]
-type Insert dim a b = N.Concat '[N.Take dim b, '[ TensorDim b dim + 1 ], N.Tail (N.Drop dim b)]
+type CheckInsert dim i b = (CheckDimension dim b && IsIndex i (Dimension b dim))  ~ 'True
+type Insert dim b = Take dim b ++ (Dimension b dim + 1 : Drop (dim + 1) b)
 
 -- | Insert tensor to higher level tensor
 --
@@ -515,16 +519,17 @@ type Insert dim a b = N.Concat '[N.Take dim b, '[ TensorDim b dim + 1 ], N.Tail 
 -- > [[1.0,2.0],
 -- > [2.0,4.0]]]
 insert
-  :: (CheckInsert dim i a b ~ 'True
+  :: ( DropIndex b dim ~ a
+    , CheckInsert dim i b
     , KnownNat i
     , KnownNat dim
-    , SingI a
-    , SingI b)
+    , HasShape a
+    , HasShape b)
   => Proxy dim
   -> Proxy i
   -> Tensor a n
   -> Tensor b n
-  -> Tensor (Insert dim a b) n
+  -> Tensor (Insert dim b) n
 insert pd px a@(Tensor ta) b@(Tensor tb) =
   let d = toNat pd
       i = toNat px
@@ -544,17 +549,18 @@ insert pd px a@(Tensor ta) b@(Tensor tb) =
 -- > [1.0,2.0,3.0]
 append
   :: forall dim a b n.
-    (CheckInsert dim (TensorDim b dim) a b ~ 'True
-    , KnownNat (TensorDim b dim)
+    ( DropIndex b dim ~ a
+    , CheckInsert dim (Dimension b dim) b
+    , KnownNat (Dimension b dim)
     , KnownNat dim
-    , SingI a
-    , SingI b)
+    , HasShape a
+    , HasShape b)
   => Proxy dim
   -> Tensor a n
   -> Tensor b n
-  -> Tensor (Insert dim a b) n
-append pd = insert pd (Proxy :: Proxy (TensorDim b dim))
+  -> Tensor (Insert dim b) n
+append pd = insert pd (Proxy :: Proxy (Dimension b dim))
 
 -- | Convert tensor to untyped function, for internal usage.
-runTensor :: SingI s => Tensor s n -> Index -> n
+runTensor :: HasShape s => Tensor s n -> Index -> n
 runTensor t@(Tensor f) = f (shape t)

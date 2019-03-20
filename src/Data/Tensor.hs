@@ -89,7 +89,6 @@ module Data.Tensor(
   , Transpose
   , transpose
   , Swapaxes
-  , CheckSwapaxes
   , swapaxes
   -- ** Dyadic Tensor
   , dyad'
@@ -98,16 +97,14 @@ module Data.Tensor(
   , DotTensor
   , dot
   -- ** Contraction Tensor
-  , CheckContraction
   , Contraction
-  , TensorDim
+  , Dimension
   , DropIndex
   , contraction
   -- ** Tensor Selection
   , (!)
-  , CheckDim
+  , CheckDimension
   , CheckSelect
-  , Select
   , select
   , CheckSlice
   , Slice
@@ -125,7 +122,6 @@ module Data.Tensor(
   , linspace
   , geospace
   , logspace
-  , CheckGrid
   , grid
   , meshgrid2
   , meshgrid3
@@ -144,9 +140,9 @@ module Data.Tensor(
   , trace
   , diag
   -- * Statistical Functions
-  , average
-  , var
-  , std
+  -- , average
+  -- , var
+  -- , std
   -- * Helper
   , runTensor
   , i0
@@ -161,9 +157,8 @@ module Data.Tensor(
   , i9
   ) where
 
-import           Data.Tensor.Index
 import           Data.Tensor.Matrix
 import           Data.Tensor.Space
-import           Data.Tensor.Statistics
+-- import           Data.Tensor.Statistics
 import           Data.Tensor.Tensor
 import           Data.Tensor.Type

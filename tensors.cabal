@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9d763bfe9a3235edd35ab923a93cd25e8a3f62cd959b8e123063224ac0403628
+-- hash: 1a6cf6ae1048167f97664472038e406d36cb52e5b3bf2d192e5b44d872798c3c
 
 name:           tensors
 version:        0.1.3
@@ -26,7 +26,6 @@ library
       Data.Tensor
   other-modules:
       Data.Tensor.Type
-      Data.Tensor.Index
       Data.Tensor.Tensor
       Data.Tensor.Matrix
       Data.Tensor.Space
@@ -37,9 +36,6 @@ library
   ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -fno-warn-orphans -fno-warn-missing-signatures
   build-depends:
       base >=4.7 && <5
-    , deepseq
-    , reflection >=2.1.4 && <2.2
-    , singletons >=2.4.1 && <2.6
     , vector >=0.12.0.2 && <0.13
   default-language: Haskell2010
 
@@ -48,7 +44,6 @@ test-suite spec
   main-is: Spec.hs
   other-modules:
       Data.Tensor
-      Data.Tensor.Index
       Data.Tensor.Matrix
       Data.Tensor.Space
       Data.Tensor.Statistics
@@ -63,10 +58,8 @@ test-suite spec
   build-depends:
       QuickCheck >=2.11.1 && <2.13
     , base >=4.7 && <5
-    , deepseq
     , hspec ==2.*
     , reflection >=2.1.4 && <2.2
-    , singletons >=2.4.1 && <2.6
     , vector >=0.12.0.2 && <0.13
   default-language: Haskell2010
 
@@ -75,7 +68,6 @@ benchmark bm
   main-is: Bench.hs
   other-modules:
       Data.Tensor
-      Data.Tensor.Index
       Data.Tensor.Matrix
       Data.Tensor.Space
       Data.Tensor.Statistics
@@ -90,8 +82,5 @@ benchmark bm
   build-depends:
       base >=4.7 && <5
     , criterion
-    , deepseq
-    , reflection >=2.1.4 && <2.2
-    , singletons >=2.4.1 && <2.6
     , vector >=0.12.0.2 && <0.13
   default-language: Haskell2010

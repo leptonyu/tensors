@@ -1,11 +1,9 @@
 module Data.Tensor.Space where
 
 import           Data.Proxy
-import qualified Data.Singletons.Prelude      as N
-import qualified Data.Singletons.Prelude.List as N
 import           Data.Tensor.Tensor
 import           Data.Tensor.Type
-import qualified Data.Vector                  as V
+import qualified Data.Vector        as V
 import           GHC.TypeLits
 
 -- | Return evenly spaced numbers over a specified interval.
@@ -43,8 +41,6 @@ space = go (natVal (Proxy :: Proxy s))
             v  = V.generate (fromInteger count) (g d start . toInteger)
         in Tensor $ \s i -> v V.! tiTovi s i
 
-
-type CheckGrid i a s = N.And '[ (N.>=) i 0, (N.<) i (N.Length s)]
 -- | Grid
 --
 -- > λ> a = [1..2] :: Vector 2 Int
@@ -66,11 +62,11 @@ type CheckGrid i a s = N.And '[ (N.>=) i 0, (N.<) i (N.Length s)]
 -- > [[1,2],
 -- > [1,2]]]
 grid
-  :: (CheckDim i s ~ 'True
+  :: (CheckDimension i s ~ 'True
     , KnownNat i
-    , KnownNat (TensorDim s i))
+    , KnownNat (Dimension s i))
   => Proxy i
-  -> Vector (TensorDim s i) n
+  -> Vector (Dimension s i) n
   -> Tensor s n
 grid p v@(Tensor t) =
   let i = toNat p
