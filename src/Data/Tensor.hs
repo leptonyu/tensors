@@ -140,9 +140,9 @@ module Data.Tensor(
   , trace
   , diag
   -- * Statistical Functions
-  -- , average
-  -- , var
-  -- , std
+  , average
+  , var
+  , std
   -- * Helper
   , runTensor
   , i0
@@ -159,6 +159,6 @@ module Data.Tensor(
 
 import           Data.Tensor.Matrix
 import           Data.Tensor.Space
--- import           Data.Tensor.Statistics
+import           Data.Tensor.Statistics
 import           Data.Tensor.Tensor
 import           Data.Tensor.Type

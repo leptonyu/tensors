@@ -52,7 +52,7 @@ instance HasShape s => Foldable (Tensor s) where
   foldr f b t =
     let s = shape t
         r = toSize (Proxy :: Proxy s)
-    in foldr (\i -> f (getValue t s $ viToti s i)) b [0..r-1]
+    in foldr (f . gx t s) b ([0..r-1] :: [Int])
 
 instance (HasShape s, Show n) => Show (Tensor s n) where
   show (Tensor f) = let s = unShape (toShape :: SShape s) in go 0 [] s (f s)
