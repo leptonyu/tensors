@@ -51,7 +51,7 @@ tests:
       - src
     dependencies:
       - hspec == 2.*
-      - QuickCheck >=2.11.1 && <2.13
+      - QuickCheck >=2.11.1 && <2.14
       - reflection >=2.1.4 && <2.2
 benchmarks:
   bm:
