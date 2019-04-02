@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 65b8accb1cef5d79270d9cfb9d6cee0a654a113486b8522308e758efd488491a
+-- hash: 3319980ad413b54962b908f47f2eda811807ff56523b667143d3b63dc4ca3ed5
 
 name:           tensors
-version:        0.1.3
+version:        0.0.4
 synopsis:       Tensor in Haskell
 description:    Tensor use type level programming in haskell.
 category:       Library
@@ -35,7 +35,7 @@ library
   default-extensions: AllowAmbiguousTypes DataKinds ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies KindSignatures MultiParamTypeClasses PolyKinds RankNTypes ScopedTypeVariables TypeFamilies TypeOperators TypeSynonymInstances
   ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -fno-warn-orphans -fno-warn-missing-signatures
   build-depends:
-      base >=4.7 && <5
+      base >=4.9 && <5
     , vector >=0.12.0.2 && <0.13
   default-language: Haskell2010
 
@@ -57,7 +57,7 @@ test-suite spec
   ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -fno-warn-orphans -fno-warn-missing-signatures
   build-depends:
       QuickCheck >=2.11.1 && <2.14
-    , base >=4.7 && <5
+    , base >=4.9 && <5
     , hspec ==2.*
     , reflection >=2.1.4 && <2.2
     , vector >=0.12.0.2 && <0.13
@@ -80,7 +80,7 @@ benchmark bm
   default-extensions: AllowAmbiguousTypes DataKinds ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies KindSignatures MultiParamTypeClasses PolyKinds RankNTypes ScopedTypeVariables TypeFamilies TypeOperators TypeSynonymInstances
   ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -fno-warn-orphans -fno-warn-missing-signatures
   build-depends:
-      base >=4.7 && <5
+      base >=4.9 && <5
     , criterion
     , vector >=0.12.0.2 && <0.13
   default-language: Haskell2010
