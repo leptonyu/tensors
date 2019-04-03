@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3319980ad413b54962b908f47f2eda811807ff56523b667143d3b63dc4ca3ed5
+-- hash: fbfc18b76520106c4549ea972f50e8ce09eb5bbedb9d59027bd9975c61f5ad2b
 
 name:           tensors
-version:        0.0.4
+version:        0.1.4
 synopsis:       Tensor in Haskell
 description:    Tensor use type level programming in haskell.
 category:       Library
@@ -36,6 +36,7 @@ library
   ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -fno-warn-orphans -fno-warn-missing-signatures
   build-depends:
       base >=4.9 && <5
+    , deepseq
     , vector >=0.12.0.2 && <0.13
   default-language: Haskell2010
 
@@ -58,6 +59,7 @@ test-suite spec
   build-depends:
       QuickCheck >=2.11.1 && <2.14
     , base >=4.9 && <5
+    , deepseq
     , hspec ==2.*
     , reflection >=2.1.4 && <2.2
     , vector >=0.12.0.2 && <0.13
@@ -82,5 +84,6 @@ benchmark bm
   build-depends:
       base >=4.9 && <5
     , criterion
+    , deepseq
     , vector >=0.12.0.2 && <0.13
   default-language: Haskell2010

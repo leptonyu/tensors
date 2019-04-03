@@ -32,6 +32,7 @@ default-extensions:
 dependencies:
   - base >= 4.9 && < 5
   - vector >=0.12.0.2 && <0.13
+  - deepseq
 
 library:
   source-dirs: src

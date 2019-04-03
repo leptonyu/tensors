@@ -80,6 +80,7 @@ module Data.Tensor(
   , Shape
   , shape
   , rank
+  , HasShape(..)
   -- * Tensor Operation
   -- ** Reshape Tensor
   , reshape
