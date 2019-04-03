@@ -5,6 +5,7 @@
 
 module Data.Tensor.Tensor where
 
+import           Control.DeepSeq
 import           Data.List        (intercalate)
 import           Data.Proxy
 import           Data.Tensor.Type
@@ -53,6 +54,9 @@ instance HasShape s => Foldable (Tensor s) where
     let s = shape t
         r = toSize (Proxy :: Proxy s)
     in foldr (f . gx t s) b ([0..r-1] :: [Int])
+
+instance (HasShape s, NFData a) => NFData (Tensor s a) where
+  rnf = foldr (\_ -> rnf) () 
 
 instance (HasShape s, Show n) => Show (Tensor s n) where
   show (Tensor f) = let s = unShape (toShape :: SShape s) in go 0 [] s (f s)
