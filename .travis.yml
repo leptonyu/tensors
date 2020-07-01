@@ -8,12 +8,20 @@ cache:
   directories:
    - $HOME/.cabal/store
 
-cabal: 2.4
-ghc:
-  - "8.6.4"
-  - "8.4.4"
-  - "8.2.2"
-  - "8.0.2"
+matrix:
+  include:
+    - ghc: "8.10.1"
+      cabal: 3.0
+    - ghc: "8.8.2"
+      cabal: 3.0
+    - ghc: "8.6.5"
+      cabal: 2.4
+    - ghc: "8.4.4"
+      cabal: 2.4
+    - ghc: "8.2.2"
+      cabal: 2.4
+    - ghc: "8.0.2"
+      cabal: 2.4
 
 install:
  - cabal --version

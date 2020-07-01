@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.1.
+-- This file has been generated from package.yaml by hpack version 0.31.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: fbfc18b76520106c4549ea972f50e8ce09eb5bbedb9d59027bd9975c61f5ad2b
+-- hash: 54bdeb7fdda1f97c7b679a8ff901275cac79ef2796239413b29b4ccf9f619511
 
 name:           tensors
 version:        0.1.4
@@ -57,7 +57,7 @@ test-suite spec
   default-extensions: AllowAmbiguousTypes DataKinds ExistentialQuantification FlexibleContexts FlexibleInstances FunctionalDependencies KindSignatures MultiParamTypeClasses PolyKinds RankNTypes ScopedTypeVariables TypeFamilies TypeOperators TypeSynonymInstances
   ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -fno-warn-orphans -fno-warn-missing-signatures
   build-depends:
-      QuickCheck >=2.11.1 && <2.14
+      QuickCheck
     , base >=4.9 && <5
     , deepseq
     , hspec ==2.*
