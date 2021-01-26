@@ -149,9 +149,9 @@ instance HasShape s => IsList (Tensor s n) where
       then error "length not match"
       else let vv = V.fromList v in Tensor $ \s' i -> vv V.! tiTovi s' i
   toList  t =
-    let n = rank t - 1
-        s = unShape (toShape :: SShape s)
-    in fmap (gx t s) [0..n]
+    let s = unShape (toShape :: SShape s)
+        l = product s
+    in fmap (gx t s) [0..pred l]
 
 -----------------------
 -- Tensor Shape
