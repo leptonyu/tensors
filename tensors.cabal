@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: fc8b9bb853a85c3acfe8a4ffcaf1de37d1079bf99b6e534cf24eaaf461141ff2
+-- hash: 94686654d95fba4d1c63e51d5cfbb29a38b18997f620587f1f22c51af4c10109
 
 name:           tensors
-version:        0.1.4
+version:        0.1.5
 synopsis:       Tensor in Haskell
 description:    Tensor use type level programming in haskell.
 category:       Library

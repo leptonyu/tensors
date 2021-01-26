@@ -5,6 +5,7 @@
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies        #-}
+{-# LANGUAGE OverloadedLists        #-}
 
 module Main where
 
@@ -17,6 +18,8 @@ import           GHC.TypeLits
 import           Test.Hspec
 import           Test.QuickCheck
 import           Unsafe.Coerce
+import qualified GHC.Exts
+import qualified Data.Foldable
 
 main = hspec spec
 
@@ -38,7 +41,7 @@ specTensor = do
   context "viToti" $ do
     it "quickCheck" $ property $
       \s0 -> let s = normalize s0
-                 n = [0..product s - 1]
+                 n = [0..product s - 1] :: [Int]
             in fmap (tiTovi s . viToti s) n == n
     it "index" $ property $
       \i -> let i' = mod i 1000 + 1 :: Int
@@ -59,3 +62,7 @@ specTensor = do
                          idt = identity :: Tensor '[n,n] Int
                      in a `dot` idt == idt `dot` a
                in reifyNat (toInteger n) (go s)
+  context "IsList" $ do
+    it "toList Equal" $ do
+      let t = [1..9] :: Tensor '[3,3] Int
+      Data.Foldable.toList t `shouldBe` GHC.Exts.toList t 
