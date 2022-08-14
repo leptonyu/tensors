@@ -11,7 +11,7 @@ jobs:
     name: Hi tensors
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: haskell/actions/setup@v1
       with:
         ghc-version: '8.10.3'
