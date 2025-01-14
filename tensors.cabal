@@ -37,7 +37,7 @@ library
   build-depends:
       base >=4.9 && <5
     , deepseq
-    , vector >=0.12.0.2 && <0.13
+    , vector >=0.12.0.2 && <0.14
   default-language: Haskell2010
 
 test-suite spec
@@ -62,7 +62,7 @@ test-suite spec
     , deepseq
     , hspec ==2.*
     , reflection >=2.1.4 && <2.2
-    , vector >=0.12.0.2 && <0.13
+    , vector >=0.12.0.2 && <0.14
   default-language: Haskell2010
 
 benchmark bm
@@ -85,5 +85,5 @@ benchmark bm
       base >=4.9 && <5
     , criterion
     , deepseq
-    , vector >=0.12.0.2 && <0.13
+    , vector >=0.12.0.2 && <0.14
   default-language: Haskell2010
